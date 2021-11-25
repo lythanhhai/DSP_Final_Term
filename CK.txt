@@ -1,0 +1,11 @@
+độ dài cửa sổ = độ dài frame
+của sổ càng dài cho ra độ phân giải phổ càng tốt
+hàm cửa sổ chọn sao để giảm (dùng hamming)
+- tìm số điểm N, số điểm lấy mẫu phổ tính hiệu
+- độ phân giải phổ = tần số lấy mẫu / số điểm N  (44100 / 4096)
+- Chọn N lớn để có độ phân giải tốt -> f0 chính xác hơn
+- Nếu N quá lớn thì cũng không tốt -> phổ quá chi tiết -> làm cho dò hài khó hơn
++ Dò hài
+- đỉnh phổ chưa chắc là hài
+- tìm f0 dựa trên các hàm tìm được, khonagr cách các hài liên tiếp hoặc chọn ước chung (Hài cách đều nhau)
+- 
