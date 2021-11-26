@@ -7,7 +7,6 @@
  
  % phân khung cho tín hiệu
  frame_len = 0.03 * fs;% chiều dài khung, 1 khung 30ms
- overlap_time = 0.01;
  L = length(x);
  numberFrames = floor(L / frame_len);% số khung được chia
  P = zeros(numberFrames, frame_len);
@@ -36,9 +35,9 @@ ste = ste./max(ste(1, :));
 ste_wave = 0;
 for j=1:numberFrames
     l = length(ste_wave);
-    ste_wave(l : l + frame_len) = ste(j);
+    ste_wave(l : l + 0.03) = ste(j);
 end
-length(ste_wave)
+length()
 %set sgn
 n = -1000:1000;
 sgn = [zeros(1, 1000) ones(1, 1001)];
@@ -85,7 +84,7 @@ t1 = linspace(0, time1, length(ste));
 %grid on 
  
 subplot(2,1,1)
-plot(t, x, t1, ste(1, :), 'r', t1, zcr(1, :), 'g');
+plot(t, x, t1, ste_wave(1, :), 'r', t1, zcr(1, :), 'g');
 xlabel('time(sec)');
 ylabel('Bien do');
 %legend('x','ste','zcr');
