@@ -103,7 +103,7 @@ t1 = linspace(0, time1, length(ste));
 %title("test1");
 %grid on 
  
-subplot(2,1,1)
+subplot(4,1,1)
 plot(t, x, 'c', t1, ste(1, :), 'r', t1, zcr(1, :), 'g');
 xlabel('time(sec)');
 ylabel('magnitude');
@@ -115,7 +115,7 @@ th_ste = 0.001;
 th_zcr = 0.81;
 
 
-subplot(2,1,2)
+subplot(4,1,2)
 plot(t, x);
 xlabel('time(sec)');
 ylabel('magnitude');
@@ -145,5 +145,56 @@ for i=1:numberFrames-1
         end
     end
 end
+
+%{
+% phổ biên độ sử dụng fft
+y = fft(x, 4096);
+subplot(3,1,3)
+plot(y);
+xlabel('Frequency(Hz)');
+ylabel('magnitude');
+%legend('','ste','zcr');
+title('Spectrum');
+%}
+
+% test
+
+max_value=max(abs(x));
+x=x/max_value;
+
+dftx=abs(fft(x, 4096));
+len=length(dftx);
+tt=linspace(1/fs,fs,length(dftx));
+dftxlog=10*log10(dftx);
+subplot(4,1,3);
+plot(tt,dftxlog);
+xlabel('frequency in Hz');
+
+
+
+
+
+x2=0;
+zero=zeros(1, 10000);
+w=window(@hamming, length(x));
+for i=1:length(x)
+  x(i)=x(i)*w(i);
+end
+x2 = [x];
+
+dftx=abs(fft(x2, 4096));
+dftx=dftx(1:(length(dftx)/2));
+dftx=10*log(dftx);
+c=dftx;
+
+max_value=max(abs(x));
+x=x(1:240);
+x=x/max_value;
+t=(1/(1000*fs):1/fs:(length(x)/fs));
+
+f=linspace(1/fs, fs/2000, length(dftx));  
+subplot(4,1,4);
+plot(f,dftx);
+title('Log magnitude spectrum using hamming window');
 
 end
