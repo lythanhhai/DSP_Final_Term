@@ -79,21 +79,21 @@ grid on
 time1 = 0.01 * length(ste);
 t1 = linspace(0, time1, length(ste));
 
-t3 = [0 : 1/fs : length(ste_wave)/fs];
-t3 = t3(1:end - 1) / 3;
+t2 = [0 : 1/fs : length(ste_wave)/fs];
+t2 = t2(1:end - 1) / 3;
 
  
 subplot(4,1,1);
 %plot(t3,zcr_wave,'r','LineWidth',1);
-plot(t, x, 'c', t3, ste_wave, 'r');
+plot(t, x, 'c', t2, ste_wave, 'r');
 xlabel('time(sec)');
 ylabel('magnitude');
 legend('x','STE');
 title('Speech signal vs STE');
 
 % xác định ngưỡng và xét
-th_ste = 0.061372;
-%th_ste = 0.0009;
+%th_ste = 0.061372;
+th_ste = 0.00024;
 th_zcr = 0.254467;
 
 subplot(4,1,2)
@@ -176,16 +176,48 @@ xlabel('frequency in Hz');
 max_value=max(abs(x));
 z=P(60, :);
 z=z/max_value;
-t2=(1/(1000*fs):1/fs:(length(z)/fs));
+t3=(1/(fs):1/fs:(length(z)/fs));
 subplot(4,1,3);
-plot(t2,z);
+plot(t3,z);
 title('Voiced segment of speech');
+xlabel("Time(sec)");
 
-dfty=stft(z, fs);
-f=linspace(1/fs, fs/2000, length(dfty));
+
+z2=0;
+zero=zeros(1:10000);
+w=window(@hamming, length(z));
+for i=1:length(z)
+  z(i)=z(i)*w(i);
+end
+z2 = [zero y zero];
+
+dftz=abs(fft(z2));
+dftz=dftz(1:(length(dftz)/2));
+dftzlog=10*log10(dftz);
+freq=linspace(1/fs, fs/2000, length(dftz));
 subplot(4,1,4);
-plot(f,dfty);
+plot(freq,dftzlog);
 title('Log magnitude spectrum using hamming window');
+xlabel("Frequent in HZ");
 
+
+%{
+figure(2);
+max_value=max(abs(x));
+z=P(60, :);
+z=z/max_value;
+t=1/fs:1/fs:(length(z)/fs);
+subplot(3,1,1);
+plot(t,z);
+title('Voiced Speech waveform');
+
+dftz=abs(fft(z));
+dftz=dftz(1:(length(dftz)/2));
+dftzlog=10*log10(dftz);
+freq=linspace(1/fs,fs/2000,length(dftz));
+subplot(3,1,2);
+plot(freq,dftylog);
+title('Log Magnitude Spectrum');
+%}
 
 end
