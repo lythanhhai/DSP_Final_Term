@@ -4,7 +4,7 @@
  % input audio
  [x,fs]=audioread(filename);
  figure('name', tenFile);
-
+ x = x./max(x);
  % phân khung cho tín hiệu
  frame_duration = 0.03;
  frame_len = 0.03 * fs;% chiều dài khung, 1 khung 30ms
@@ -33,16 +33,20 @@
  for i = 1:numberFrames
      startIndex = (i - 1) * overlap_len + 1;
      endIndex = (i - 1) * overlap_len + frame_len + 1;
-     if endIndex < L
+     if endIndex <= L
         for j = 1:frame_len
             P(i, j) = x(startIndex + j - 1);
         end 
      else 
-        for j = 1:frame_len-startIndex
+        for j = 1:(L - startIndex)
             P(i, j) = x(startIndex + j - 1);
         end 
+        for j = L:(endIndex - L)
+            P(i, j) = 0;
+        end
      end
  end
+ 
 
 
  
@@ -62,11 +66,11 @@ end
 %normalized ste
 ste = ste./max(ste(1, :));
 
-ste_copy = zeros(numberFrames);
+
+ste_copy = zeros(numberFrames, 1);
 for i = 1:numberFrames
     ste_copy(i) = ste(i);
 end
-
 ste_copy;
 
 ste_wave = 0;
@@ -123,7 +127,6 @@ end
 zcr_copy;
 
 
- 
 time = (1/fs)*length(x);
 t = linspace(0, time, length(x));
 grid on
@@ -131,57 +134,50 @@ grid on
 time1 = 0.01 * length(ste);
 t1 = linspace(0, time1, length(ste));
 
-t3 = [0 : 1/fs : length(zcr_wave)/fs];
-t3 = t3(1:end - 1) /3;
+t3 = [0 : 1/fs : length(ste_wave)/fs];
+t3 = t3(1:end - 1) / 3;
 
  
 subplot(4,1,1);
 %plot(t3,zcr_wave,'r','LineWidth',1);
-plot(t, x, 'c', t1, ste(1, :), 'r', t1, zcr(1, :), 'g');
+plot(t, x, 'c', t3, ste_wave, 'r');
 xlabel('time(sec)');
 ylabel('magnitude');
-legend('x','STE','ZCR');
-title('Speech signal vs STE vs ZCR');
+legend('x','STE');
+title('Speech signal vs STE');
 
 % xác định ngưỡng và xét
-%th_ste = 0.061372;
-th_ste = 0.06;
-th_zcr = 0.47;
-
+th_ste = 0.061372;
+%th_ste = 0.0009;
+th_zcr = 0.254467;
 
 subplot(4,1,2)
 plot(t, x);
 xlabel('time(sec)');
 ylabel('magnitude');
 %legend('','ste','zcr');
-title('Voice vs Unvoice');
+title('Vowel vs Silence');
 
 % chuẩn trong file lab
 for i=1:length(MDA01)
-     xline(MDA01(i), 'r-', 'LineWidth', 1.5);
+     xline(MDA01(i), 'r-', 'LineWidth', 2);
 end
 
 %overlap
-% theo thuật toán zcr và ste
+% theo thuật toán ste
 for i=1:numberFrames-1
-    %voice
-    if(ste(1, i) > th_ste && zcr(1, i) < th_zcr)
-        %for j = (i - 1) * overlap_duration : overlap_duration / 2 : overlap_duration * i
-            if ((ste(1, i + 1) < th_ste || zcr(1, i + 1) > th_zcr))
-                xline(0.01 * i, 'g', 'LineWidth', 1.5);
-            end
-        %end
-        %&& j == (overlap_duration * i)
-    %unvoice 
+    %vowel
+    if(ste(1, i) > th_ste)
+        if ((ste(1, i + 1) < th_ste))
+            xline(0.01 * i, 'g', 'LineWidth', 2);
+        end
+    %silence 
     else 
-        %for j = (i - 1) * overlap_duration : overlap_duration / 2 : overlap_duration * i
-            if (ste(1, i + 1) > th_ste && zcr(1, i + 1) < th_zcr)
-                xline(0.01 * (i + 1), 'g', 'LineWidth', 1.5);
-            end
-        %end
+        if (ste(1, i + 1) > th_ste)
+            xline(0.01 * (i + 3), 'g', 'LineWidth', 2);
+        end
     end
 end
-
 
 % frame
 %{
@@ -250,27 +246,6 @@ xlabel('frequency in Hz');
 %}
 
 
-%{
-max_value=max(abs(y));
-y=y(1:240);
-y=y/max_value;
-t=(1/(1000*Fs):1/Fs:(length(y)/Fs));
-%}
-
-%{
-y=z;
-y2=0;
-zero=zeros(1:10000);
-w=window(@hamming,length(y));
-for i=1:length(y)
-  y(i)=y(i)*w(i);
-end
-y2 = [zero y zero];
-
-dfty=abs(fft(y2, 4096));
-dfty=dfty(1:(length(dfty)/2));
-dfty=10*log(dfty);
-%}
 
 max_value=max(abs(x));
 z=P(60, :);
