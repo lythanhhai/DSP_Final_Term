@@ -1,20 +1,11 @@
-%Phone_F1 = [0.53, 1.14, 1.21, 1.35, 1.45, 1.60, 1.83, 2.20, 2.28, 2.35, 2.40, 2.52, 2.66, 2.73];
-%Fo_studio_fe = V_UV('./fileTinHieuMoi/studio_F1.wav', 'studio female1', Studio_F1);
-%Fo_studio_ma = V_UV('./fileTinHieuMoi/studio_M1.wav', 'studio male');
-%Fo_phone_fe = V_UV('./fileTinHieuMoi/phone_F1.wav', 'phone female', Phone_F1);
-%Fo_phone_ma = V_UV('./fileTinHieuMoi/phone_M1.wav', 'phone male');
+FTN30 = [0.59, 0.97, 1.76, 2.11, 3.44, 3.77, 4.70, 5.13, 5.96, 6.28];
+FQT42 = [0.46, 0.99, 1.56, 2.13, 2.51, 2.93, 3.79, 4.38, 4.77, 5.22];
+MTT44 = [0.93, 1.42, 2.59, 3.00, 4.71, 5.11, 6.26, 6.66, 8.04, 8.39];
+MDV45 = [0.88, 1.34, 2.35, 2.82, 3.76, 4.13, 5.04, 5.50, 6.41, 6.79];
+
+FTN = V_UV('./tinHieuHuanLuyen/30FTN.wav', '30FTN', FTN30);
+FQT = V_UV('./tinHieuHuanLuyen/42FQT.wav', '42FQT', FQT42);
+MTT = V_UV('./tinHieuHuanLuyen/44MTT.wav', '44MTT', MTT44);
+MDV = V_UV('./tinHieuHuanLuyen/45MDV.wav', '45MDV', MDV45);
 
 
-MDA01 = [0.45, 0.81, 1.53, 1.85, 2.69, 2.86, 3.78, 4.15, 4.84, 5.14];
-
-
-MDA = V_UV('./tinHieuHuanLuyen/01MDA.wav', 'studio female', MDA01);
-
-Fo_studio_fe1 = V_UV('./tinHieuHuanLuyen/01MDA.wav', 'studio female', MDA01);
-
-%Fo_studio_fe1 = V_UV('./tinHieuHuanLuyen/01MDA.wav', 'studio female');
-
-
-%Fo_studio_ma = V_UV('./tinHieuHuanLuyen/02FVA.wav', 'studio male');
-%Fo_phone_fe = V_UV('./tinHieuHuanLuyen/03MAB.wav', 'phone female');
-%Fo_phone_ma = V_UV('./tinHieuHuanLuyen/06FTB.wav', 'phone male');
