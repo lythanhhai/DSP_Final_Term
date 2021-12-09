@@ -1,5 +1,5 @@
 % lọc trung vị
-function [filterFo] = filterF0(F0, numberFrames)
+function [filterFo, fo_mean_median, fo_std_median] = filterF0(F0, numberFrames)
 soPhanTu = 5;
 filterFo = zeros(1, numberFrames + 4);
 % thêm 2 biên cho dãy Fo

@@ -2,7 +2,7 @@
 function [dftz] = Window_Hamming(Speech_signal)
 z = Speech_signal;
 z2 = 0;
-zero = zeros(1, 0);
+zero = zeros(1, 1000);
 %w = window(@hamming, length(z));
 w = hamming(length(z));
 for i=1:length(z)
