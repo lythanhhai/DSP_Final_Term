@@ -1,5 +1,5 @@
 %clear; clc; clf;
-function [F0] = pitchDetectHPS(newDftz, index_frame, fs, ste, th_ste, pointFFT)
+function [F0, thresh] = pitchDetectHPS(newDftz, index_frame, fs, ste, th_ste, pointFFT)
     
     index1 = 1;
     for i = 1:length(newDftz)
@@ -65,26 +65,23 @@ function [F0] = pitchDetectHPS(newDftz, index_frame, fs, ste, th_ste, pointFFT)
     data;
 
     Maximum = locs(1);
-    %{
-    Max = -1000000;
-    if(length(y) > 1)
-        for i=1:length(y)
-            if y(i) > Max
-                Maximum = locs(index(i));
-            else
-                %Maximum = index(i) * 5;
+    
+    thresh = 0;
+    
+    % phát hiện pitch ảo
+    if length(locs) > 1
+        thresh = y(locs(2)) / y(locs(1));
+        if y(locs(1)) * 0.4 < y(locs(2))
+            [data1, locs1] = findpeaks(y);
+            [data2, locs2] = findpeaks(data1);
+            %Maximum = locs(length(locs));
+            if length(locs2) > 0
+                Maximum = locs1(locs2(length(locs2)));
             end
         end
-    else
-        Maximum = locs(index(1));
     end
-    %}
     
-    if length(locs) > 1
-        if y(locs(1)) * 0.5 < y(locs(2))
-            Maximum = locs(length(locs));
-        end
-    end
+
     
     if Maximum < 20 && Maximum > 7
         %Maximum = Maximum * 2;
