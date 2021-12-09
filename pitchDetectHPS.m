@@ -1,12 +1,6 @@
 %clear; clc; clf;
-function [F0] = pitchDetectHPS(newDftz, index_frame, fs, ste, th_ste)
-    %{
-    hps1 = downsample(newDftz, 1);
-    hps2 = downsample(newDftz, 2);
-    hps3 = downsample(newDftz, 3);
-    hps4 = downsample(newDftz, 4);
-    hps5 = downsample(newDftz, 5);
-    %}
+function [F0] = pitchDetectHPS(newDftz, index_frame, fs, ste, th_ste, pointFFT)
+    
     index1 = 1;
     for i = 1:length(newDftz)
         hps1(index1) = newDftz(i);
@@ -45,10 +39,18 @@ function [F0] = pitchDetectHPS(newDftz, index_frame, fs, ste, th_ste)
         end
     end
     
+    hps1 = downsample(newDftz, 1);
+    hps2 = downsample(newDftz, 2);
+    hps3 = downsample(newDftz, 3);
+    hps4 = downsample(newDftz, 4);
+    hps5 = downsample(newDftz, 5);
+    
     y = zeros(length(hps5), 1);
+    %index = 0;
     for i=1:length(hps5)
           Product = hps1(i) * hps2(i) * hps3(i) * hps4(i) * hps5(i);
           y(i) = Product;
+          index(i) = i;% vị trí
     end
     
     %{
@@ -63,12 +65,33 @@ function [F0] = pitchDetectHPS(newDftz, index_frame, fs, ste, th_ste)
     data;
 
     Maximum = locs(1);
+    %{
+    Max = -1000000;
+    if(length(y) > 1)
+        for i=1:length(y)
+            if y(i) > Max
+                Maximum = locs(index(i));
+            else
+                %Maximum = index(i) * 5;
+            end
+        end
+    else
+        Maximum = locs(index(1));
+    end
+    %}
     
-    %if HPS(locs(1)) * 0.5 > HPS(locs(2))
-        %Maximum = locs(length(locs));
-    %end
+    if length(locs) > 1
+        if y(locs(1)) * 0.5 < y(locs(2))
+            Maximum = locs(length(locs));
+        end
+    end
     
-    F0 =  ((Maximum / 4096) * fs);
+    if Maximum < 20 && Maximum > 7
+        %Maximum = Maximum * 2;
+    end
+    
+    
+    F0 =  ((Maximum / pointFFT) * fs);
     
     if F0 > 400 || F0 < 70 || ste < th_ste
         F0 =  0;
