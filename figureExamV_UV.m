@@ -7,9 +7,9 @@ MDV45 = [0.88, 1.34, 2.35, 2.82, 3.76, 4.13, 5.04, 5.50, 6.41, 6.79];
 pointFFT = 4096;
 rangeFreq_male = 1000;
 rangeFreq_female = 2000;
-FTN = V_UV('./tinHieuHuanLuyen/30FTN.wav', '30FTN', FTN30, pointFFT, rangeFreq_female);
-FQT = V_UV('./tinHieuHuanLuyen/42FQT.wav', '42FQT', FQT42, pointFFT, rangeFreq_female);
+%FTN = V_UV('./tinHieuHuanLuyen/30FTN.wav', '30FTN', FTN30, pointFFT, rangeFreq_female);
+%FQT = V_UV('./tinHieuHuanLuyen/42FQT.wav', '42FQT', FQT42, pointFFT, rangeFreq_female);
 MTT = V_UV('./tinHieuHuanLuyen/44MTT.wav', '44MTT', MTT44, pointFFT, rangeFreq_male);
-MDV = V_UV('./tinHieuHuanLuyen/45MDV.wav', '45MDV', MDV45, pointFFT, rangeFreq_male);
+%MDV = V_UV('./tinHieuHuanLuyen/45MDV.wav', '45MDV', MDV45, pointFFT, rangeFreq_male);%
 
 

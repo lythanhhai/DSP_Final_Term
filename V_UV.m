@@ -155,6 +155,7 @@ for index_frame=1:numberFrames
     end
 end
 sum2 = 0;
+arrThresh = zeros(numberFrames, 1);
 % tạo cửa sổ và tính HPS cho từng khung
 for index_frame=1:numberFrames
     dftz = Window_Hamming(z(index_frame, :));
@@ -168,13 +169,17 @@ for index_frame=1:numberFrames
     
     %newDftz1 = findpeaks(newDftz);
     
-    F0(index_frame) = pitchDetectHPS(newDftz, index_frame, fs, ste(index_frame), th_ste, pointFFT);
-    
+    [F0(index_frame), thresh] = pitchDetectHPS(newDftz, index_frame, fs, ste(index_frame), th_ste, pointFFT);
+    arrThresh(index_frame) = thresh;
     %[F0(index_frame), averageData] = pitchDetectPropose(newDftz, index_frame, fs, ste(index_frame), th_ste, pointFFT);
     %averageData;
-    %sum2 = sum2 + averageData;
+    sum2 = sum2 + thresh;
     
 end
+arrThresh
+sum2
+sum2 / numberFrames
+numberFrames
 sum2/index_frame;
 F0;
 
@@ -182,7 +187,7 @@ F2 = downsample(F0, 3);
 
 %figure(2);
 
-index_frame_test = 360;
+index_frame_test = 1;
 k = P(index_frame_test, :);
 t3=(1/(fs):1/fs:(length(k)/fs));
 subplot(5,1,4);
@@ -210,82 +215,6 @@ for i=1:length(dftk)
        newDftk(i) = dftk(i);
     end
 end
-
-%{
-        [data1, locs1] = findpeaks(newDftk);
-        data1;
-        locs1;
-        [data, locs] = findpeaks(data1);
-        %data = [ data 0 ];
-        data;
-        locs;
-        sum = 0;
-        for i=1:length(data1)
-            sum = sum + data1(i);
-        end
-        averageData = sum / length(data1);
-        
-        % tìm min cực đại
-        min = max(data);
-        for i=1:length(data)
-            if data(i) < min
-               min = data(i);
-            end
-        end
-        min;
-
-        % tìm vị trí cực đại lớn nhất
-        vitri = 1;
-        for i=1:length(data)
-            if max(data) == data(i)
-                vitri = i;
-                break;
-            end
-        end
-        
-        % tìm hài cho khung tín hiệu
-        %harmonic = [];
-        index = 1;
-        harmonic = [];
-        for i=1:length(data)
-            %if data(i) > averageData 
-            %if data(i) > 9.90
-            %if data(i) * 0.36 > min
-            %if max(data) * 0.65 < data(i) && i > vitri
-                harmonic(index) = locs1(locs(i));% mảng lưu vị trí
-                %harmonic(index) = locs(i);% mảng lưu vị trí
-                index = index + 1;
-            %end
-        end
-        harmonic;
-
-        % tìm khoảng cách giữa các hài.
-        space = zeros(length(harmonic)-1, 1);
-        for i=1:length(harmonic)-1
-            space(i) = (harmonic(i + 1) - harmonic(i)) * fs / pointFFT; 
-        end
-        space;
-        % check các khoảng trống xem bằng nhau không
-        check = 0; % biến kiểm tra;
-        for i=1:length(space)-1
-            if space(i) < (space(i + 1) + 30) && space(i) > (space(i + 1) - 30)
-               check = check + 1;
-            end
-        end
-        
-
-        % nếu bằng nhau
-        if check == length(space)-1
-            F1 =  (harmonic(2) - harmonic(1)) * fs / pointFFT;
-            if F1 > 400 || F1 < 70 || ste(index_frame_test) < th_ste
-                F1 =  0;
-            end
-        % nếu không bằng nhau    
-        else 
-            F1 = 0;
-        end
-    F1;
-    %}
 
 
 %{
@@ -339,24 +268,6 @@ for i=1:length(hps5)
       y(i) = Product;
 end
 
-[data1, locs1] = findpeaks(y, 'SORTSTR', 'descend');
-data1
-locs1
-%{
-[data1, locs1] = findpeaks(y);
-data1
-locs1
-[data2, locs2] = findpeaks(data1);
-data2
-locs2
-%}
-Maximum = locs1(1);
-    
-if y(locs1(1)) * 0.5 > y(locs1(2))
-   %Maximum = locs(length(locs));
-end
-    
-F1 =  ((Maximum / pointFFT) * fs)
 
 fs;
 freq = linspace(1/fs, 44100 / pointFFT * length(newDftk), length(newDftk));
@@ -392,8 +303,8 @@ xlabel("Frequent(HZ)");
 [filterFo, fo_mean_median, fo_std_median] = filterF0(F0, numberFrames);
 subplot(5,1,3);
 plot(filterFo, '.');
-fo_mean_median
-fo_std_median
+fo_mean_median;
+fo_std_median;
 
 %{
 figure(2);
