@@ -1,7 +1,7 @@
 %clear; clc; clf;
 function [F0, averageData] = pitchDetectPropose(newDftz, index_frame, fs, ste, th_ste, pointFFT)
-    [data1, locs1] = findpeaks(newDftz);
-    [data, locs] = findpeaks(data1);
+    [data, locs] = findpeaks(newDftz);
+    %[data, locs] = findpeaks(data1);
     % biến đổi data và locs
     %{
     data = zeros(floor(length(data1) / 3), 3);
@@ -46,14 +46,14 @@ function [F0, averageData] = pitchDetectPropose(newDftz, index_frame, fs, ste, t
         index = 1;
         harmonic = [];
         for i=1:length(data)
-            %if data(i) > averageData 
+            if data(i) > averageData 
             %if data(i) > 9.91
             %if data(i) * 0.36 > min
             %if max(data) * 0.5 < data(i)
             %if data(i) > averageData
-                harmonic(index) = locs1(locs(i));% mảng lưu vị trí
+                harmonic(index) = locs(i);% mảng lưu vị trí
                 index = index + 1;
-            %end
+            end
         end
 
         % tìm khoảng cách giữa các hài.
