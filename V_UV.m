@@ -5,27 +5,16 @@
  [x,fs]=audioread(filename);
  figure('name', tenFile);
  
+ % chuẩn hóa tín hiệu
  x = x./max(x);
  
- % phân khung cho tín hiệu
  frame_duration = 0.03;
- frame_len = 0.03 * fs;% chiều dài khung, 1 khung 30ms
+ frame_len = frame_duration * fs;% chiều dài khung, 1 khung 30ms
  overlap_duration = 0.01;
- overlap_len = 0.01 * fs;
+ overlap_len = overlap_duration * fs;
  L = length(x);
 
- %{
- numberFrames = floor(L / frame_len);% số khung được chia
- P = zeros(numberFrames, frame_len);
- for i = 1:numberFrames
-     startIndex = (i - 1) * frame_len + 1;
-     for j = 1:frame_len
-         P(i, j) = x(startIndex + j - 1);
-     end
- end
-%}
- 
- % chia khung
+ % phân khung cho tín hiệu
  numberFrames = floor((L - frame_len) / overlap_len + 1);% số khung được chia
  P = zeros(numberFrames, frame_len);
  for i = 1:numberFrames
@@ -45,8 +34,10 @@
      end
  end
  
+ % mảng xác định khung có tuần hoàn không
+ periodic = AMDF(P, numberFrames, frame_len, fs);
+ 
 % tính STE cho từng khung
-sumSTE = 0;
 ste = zeros(1, numberFrames);
 for l=1:numberFrames
     sumSTE=0;
@@ -58,7 +49,6 @@ end
 
 % normalized ste
 ste = ste./max(ste(1, :));
-
 
 ste_copy = zeros(numberFrames, 1);
 for i = 1:numberFrames
@@ -108,12 +98,12 @@ th_ste = 0.02;
 % overlap
 % theo thuật toán ste
 for i=1:numberFrames-1
-    %vowel
+    % vowel
     if(ste(1, i) > th_ste)
         if ((ste(1, i + 1) < th_ste))
             xline(0.01 * i, 'g', 'LineWidth', 2);
         end
-    %silence 
+    % silence 
     else 
         if (ste(1, i + 1) > th_ste)
             xline(0.01 * (i + 3), 'g', 'LineWidth', 2);
@@ -131,35 +121,9 @@ for index_frame=1:numberFrames
     end
 end
 
-sumThresh = 0;
-arrThresh = zeros(numberFrames, 1);
-% tìm thresh
-for index_frame=1:numberFrames
-    dftz = Window_Hamming(z(index_frame, :));
-    
-    for i=1:length(dftz)
-        % giới hạn dãy tần số <= 1kHz hoặc 2kHz
-        if i * (fs / pointFFT) <= rangeFreq
-            newDftz(i) = dftz(i);
-        end
-    end
-
-    thresh = threshHPS(newDftz);
-    sumThresh = sumThresh + thresh;
-    arrThresh(index_frame) = thresh;
-end
-
-count = 0.1;
-for i = 1:numberFrames
-    if arrThresh(i) > 0
-        count = count + 1;
-    end
-end
-averageThresh = sumThresh / count;
-
 % tạo cửa sổ và tính HPS cho từng khung
 for index_frame=1:numberFrames
-    dftz = Window_Hamming(z(index_frame, :));
+    dftz = Window_Hamming(z(index_frame, :), pointFFT);
     
     for i=1:length(dftz)
         % giới hạn dãy tần số <= 1kHz hoặc 2kHz
@@ -170,17 +134,17 @@ for index_frame=1:numberFrames
     
     %newDftz1 = findpeaks(newDftz);
     
-    F0(index_frame) = pitchDetectHPS(newDftz, index_frame, fs, ste(index_frame), th_ste, pointFFT, averageThresh);
+    [F0(index_frame), thresh] = pitchDetectHPS(newDftz, index_frame, fs, pointFFT, periodic);
     %[F0(index_frame), averageData] = pitchDetectPropose(newDftz, index_frame, fs, ste(index_frame), th_ste, pointFFT);
     %averageData;
     
 end
 
-F2 = downsample(F0, 3);
+
 
 %figure(2);
 
-index_frame_test = 386;
+index_frame_test = 365;
 k = P(index_frame_test, :);
 t3=(1/(fs):1/fs:(length(k)/fs));
 subplot(5,1,4);
@@ -261,14 +225,16 @@ for i=1:length(hps5)
       y(i) = Product;
 end
 
-%{
+[data, locs] = findpeaks(y, 'SORTSTR', 'descend');
+data;
+locs;
 [data1, locs1] = findpeaks(y);
-data1
-locs1
+data1;
+locs1;
 [data2, locs2] = findpeaks(data1);
-data2
-locs2
-%}
+data2;
+locs2;
+
 
 fs;
 freq = linspace(1/fs, 44100 / pointFFT * length(newDftk), length(newDftk));
@@ -304,8 +270,8 @@ xlabel("Frequent(HZ)");
 [filterFo, fo_mean_median, fo_std_median] = filterF0(F0, numberFrames);
 subplot(5,1,3);
 plot(filterFo, '.');
-fo_mean_median;
-fo_std_median;
+fo_mean_median
+fo_std_median
 
 %{
 figure(2);
