@@ -1,5 +1,5 @@
 %clear; clc; clf;
-function [F0] = pitchDetectHPS(newDftz, index_frame, fs, ste, th_ste, pointFFT, averageThresh)
+function [F0, thresh] = pitchDetectHPS(newDftz, index_frame, fs, pointFFT, periodic)
     
     index1 = 1;
     for i = 1:length(newDftz)
@@ -73,7 +73,7 @@ function [F0] = pitchDetectHPS(newDftz, index_frame, fs, ste, th_ste, pointFFT, 
     
     if length(locs) > 2
         thresh = y(locs(2)) / y(locs(1));
-        if y(locs(1)) * averageThresh < y(locs(2))
+        if y(locs(1)) * 0.5 < y(locs(2))
             [data1, locs1] = findpeaks(y);
             [data2, locs2] = findpeaks(data1);
             %Maximum = locs(length(locs));
@@ -90,7 +90,12 @@ function [F0] = pitchDetectHPS(newDftz, index_frame, fs, ste, th_ste, pointFFT, 
     
     F0 =  ((Maximum / pointFFT) * fs);
     
+    if F0 > 400 || F0 < 70 || periodic(index_frame) == 0
+        F0 = 0;
+    end
+    %{
     if F0 > 400 || F0 < 70 || ste < th_ste
         F0 =  0;
     end
+    %}
 end
