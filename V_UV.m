@@ -1,5 +1,5 @@
  %close all;clear;clc
- function [P] =  V_UV(filename, tenFile, MDA01, pointFFT, rangeFreq)
+ function [P] =  V_UV(filename, tenFile, magnitude, pointFFT, rangeFreq, frame_voice, frame_silence)
  
  % input audio
  [x,fs]=audioread(filename);
@@ -34,8 +34,8 @@
      end
  end
  
- % mảng xác định khung có tuần hoàn không
- periodic = AMDF(P, numberFrames, frame_len, fs);
+% mảng xác định khung có tuần hoàn không
+periodic = AMDF(P, numberFrames, frame_len, fs);
  
 % tính STE cho từng khung
 ste = zeros(1, numberFrames);
@@ -62,55 +62,6 @@ for j = 1 : length(ste)
     ste_wave(l : l + frame_len) = ste(j);
 end
 
-time = (1/fs)*length(x);
-t = linspace(0, time, length(x));
-
-time1 = 0.01 * length(ste);
-t1 = linspace(0, time1, length(ste));
-
-t2 = [0 : 1/fs : length(ste_wave)/fs];
-t2 = t2(1:end - 1) / 3;
-
-subplot(5,1,1);
-%plot(t3,zcr_wave,'r','LineWidth',1);
-plot(t, x, 'b', t2, ste_wave, 'r');
-xlabel('time(sec)');
-ylabel('magnitude');
-legend('x','STE');
-title('Speech signal vs STE');
-
-subplot(5,1,2);
-plot(t, x);
-xlabel('time(sec)');
-ylabel('magnitude');
-%legend('','ste','zcr');
-title('Vowel vs Silence');
-
-% đường biên chuẩn trong file lab
-for i=1:length(MDA01)
-     xline(MDA01(i), 'r-', 'LineWidth', 2);
-end
-
-% xác định ngưỡng và xét
-th_ste = 0.02;
-%th_zcr = 0.254467;
-
-% overlap
-% theo thuật toán ste
-for i=1:numberFrames-1
-    % vowel
-    if(ste(1, i) > th_ste)
-        if ((ste(1, i + 1) < th_ste))
-            xline(0.01 * i, 'g', 'LineWidth', 2);
-        end
-    % silence 
-    else 
-        if (ste(1, i + 1) > th_ste)
-            xline(0.01 * (i + 3), 'g', 'LineWidth', 2);
-        end
-    end
-end
-
 max_value=max(abs(x));
 F0 = zeros(1, numberFrames);
 z = zeros(numberFrames, frame_len);
@@ -132,146 +83,149 @@ for index_frame=1:numberFrames
         end
     end
     
-    %newDftz1 = findpeaks(newDftz);
+    F0(index_frame) = 0;
+    if periodic(index_frame) == 1
+        [F0(index_frame), thresh] = pitchDetectHPS(newDftz, index_frame, fs, pointFFT, periodic);
+    end
     
-    [F0(index_frame), thresh] = pitchDetectHPS(newDftz, index_frame, fs, pointFFT, periodic);
     %[F0(index_frame), averageData] = pitchDetectPropose(newDftz, index_frame, fs, ste(index_frame), th_ste, pointFFT);
     %averageData;
     
 end
 
-
-
-%figure(2);
-
-index_frame_test = 365;
-k = P(index_frame_test, :);
-t3=(1/(fs):1/fs:(length(k)/fs));
-subplot(5,1,4);
-plot(t3,k);
-title('Voiced segment of speech');
-xlabel("Time(sec)");
-
-%dftk = Window_Hamming(k);
-%k2 = 0;
-
-zero = zeros(1, 1000);
-w = hamming(length(k));
-for i=1:length(k)
-  k(i) = k(i)*w(i);
-end
-k2 = [zero k zero];
-
-dftk = abs(fft(k2, pointFFT));
-dftk = dftk(1:(length(dftk) / 2));
-dftk = 10*log10(dftk);
-
-for i=1:length(dftk)
-    % giới hạn dãy tần số <= 1kHz
-    if i * (fs / pointFFT) <= rangeFreq
-       newDftk(i) = dftk(i);
+% tính trung bình cộng Fo trước khi lọc trung vị
+fomean_median = 0;
+j = 0;
+for i=1:(numberFrames)
+    if F0(i) ~= 0
+       fomean_median = fomean_median + F0(i);
+       j = j + 1;
     end
 end
 
-
-%{
-hps1 = downsample(newDftk, 1);
-hps2 = downsample(newDftk, 2);
-hps3 = downsample(newDftk, 3);
-hps4 = downsample(newDftk, 4);
-hps5 = downsample(newDftk, 5);
-%}
-index1 = 1;
-    for i = 1:length(newDftk)
-        hps1(index1) = newDftk(i);
-        index1 = index1 + 1;
+% tính độ lệch chuẩn (Fo_std)
+phuongsai_median = 0;
+for i=1:(numberFrames)
+    if F0(i) ~= 0
+        phuongsai_median = phuongsai_median + power(F0(i) - fomean_median / j, 2);
     end
-
-    index1 = 1;
-    for i = 1:length(newDftk)
-        if mod(i, 2) == 0
-            hps2(index1) = newDftk(i);
-            index1 = index1 + 1;
-        end
-    end
-
-    index1 = 1;
-    for i = 1:length(newDftk)
-        if mod(i, 3) == 0
-            hps3(index1) = newDftk(i);
-            index1 = index1 + 1;
-        end
-    end
-
-    index1 = 1;
-    for i = 1:length(newDftk)
-        if mod(i, 4) == 0
-            hps4(index1) = newDftk(i);
-            index1 = index1 + 1;
-        end
-    end
-
-    index1 = 1;
-    for i = 1:length(newDftk)
-        if mod(i, 5) == 0
-            hps5(index1) = newDftk(i);
-            index1 = index1 + 1;
-        end
-    end
-    
-y = zeros(length(hps5), 1);
-for i=1:length(hps5)
-    Product = hps1(i) * hps2(i) * hps3(i) * hps4(i) * hps5(i);
-      y(i) = Product;
 end
 
-[data, locs] = findpeaks(y, 'SORTSTR', 'descend');
-data;
-locs;
-[data1, locs1] = findpeaks(y);
-data1;
-locs1;
-[data2, locs2] = findpeaks(data1);
-data2;
-locs2;
-
-
-fs;
-freq = linspace(1/fs, 44100 / pointFFT * length(newDftk), length(newDftk));
-%freq = linspace(1/fs, fs, length(dftk));
-subplot(5,1,5);
-%{
-plot(k, 'g');
-hold on
-plot(w, 'b');
-plot(k2, 'r');
-%}
-plot(freq, newDftk);
-title('Log magnitude spectrum using hamming window');
-xlabel("Frequent(HZ)");
-%newDftk1 = findpeaks(newDftk);
-%F1 = pitchDetectHPS(newDftk, 1, fs, ste(1), th_ste);
-
-
-freq = linspace(1/fs, 44100 / pointFFT * length(newDftk), length(newDftk));
-%freq = linspace(1/fs, fs, length(dftk));
-subplot(5,1,5);
-%{
-plot(k, 'g');
-hold on
-plot(w, 'b');
-plot(k2, 'r');
-%}
-plot(freq, newDftk);
-title('Log magnitude spectrum using hamming window');
-xlabel("Frequent(HZ)");
+% trung bình cộng
+fo_mean_median_be = fomean_median/j;
+% độ lệch chuẩn
+fo_std_median_be = sqrt(phuongsai_median / (j-1));
 
 % lọc trung vị
 [filterFo, fo_mean_median, fo_std_median] = filterF0(F0, numberFrames);
-subplot(5,1,3);
-plot(filterFo, '.');
-fo_mean_median
-fo_std_median
+%subplot(5,1,3);
+%plot(filterFo, '.');
+fo_mean_median;
+fo_std_median;
+
+row = 7;
+
+% khung thời gian tín hiệu
+time = (1/fs)*length(x);
+t = linspace(0, time, length(x));
+
+% khung thời gian F0 sau khi lọc trung vị
+time2 = 0.01 * length(F0);
+t2 = linspace(0, time2, length(F0));
+
+% khung thời gian F0
+time1 = 0.01 * length(filterFo);
+t1 = linspace(0, time1, length(filterFo));
+
+% khung thời gian ste
+t3 = [0 : 1/fs : length(ste_wave)/fs];
+t3 = t3(1:end - 1) / 3;
+
+% vẽ tín hiệu
+subplot(row,1,1);
+plot(t, x);
+xlabel('time(sec)');
+ylabel('magnitude');
+title('Speech signal');
+
+% kết quả khi chưa lọc
+subplot(row,1,2);
+plot(t, x);
+xlabel('time(sec)');
+ylabel('magnitude');
+%legend('','ste','zcr');
+title('Vowel vs Silence');
+
+% vẽ biến chuẩn và biên theo thuật toán
+drawMagnitude(ste, magnitude, numberFrames);
+
+% kết quả khi chưa lọc
+subplot(row,1,3);
+plot(t2, F0, '.');
+xlabel('time(sec)');
+ylabel('F0(Hz)');
+title(['Fo trước khi lọc trung vị: ', 'Fomean = ', num2str(fo_mean_median_be), 'Hz ', ' Fostd = ', num2str(fo_std_median_be), 'Hz']);
+
+% kết quả khi đã lọc
+subplot(row,1,4);
+plot(t1, filterFo, '.');
+xlabel('time(sec)');
+ylabel('F0(Hz)');
+title(['Fo sau khi lọc trung vị: ', 'Fomean = ', num2str(fo_mean_median), 'Hz ', ' Fostd = ', num2str(fo_std_median), 'Hz']);
+
+% vẽ đồ thị trung gian ste
+subplot(row,1,5);
+plot(t, x, t3, ste_wave, 'r');
+xlabel('time(sec)');
+ylabel('magnitude');
+legend('Speech signal','STE');
+title('Speech signal vs STE');
+
+% voice
+time4 = (1/fs)*length(P(frame_voice, :));
+t4 = linspace(0, time4, length(P(frame_voice, :)));
+
+% silence
+time5 = (1/fs)*length(P(frame_silence, :));
+t5 = linspace(0, time4, length(P(frame_silence, :)));
+
+% khung voice trên miền thời gian
+subplot(row,2,11);
+plot(t4, P(frame_voice, :));
+xlabel('time(sec)');
+ylabel('magnitude');
+title('Khung voice');
+
+% khung khoảng lặng trên miền thời gian
+subplot(row,2,12);
+plot(t5, P(frame_silence, :));
+xlabel('time(sec)');
+ylabel('magnitude');
+title('Khung silence');
+
+k1 = Window_Hamming(z(frame_voice, :), pointFFT); 
+k2 = Window_Hamming(z(frame_silence, :), pointFFT);
+
+% phổ biên độ voice
+freq_voice = linspace(1/fs, fs, length(k1));
+
+% phổ biên độ silence
+freq_silence = linspace(1/fs, fs, length(k2));
+
+% phổ biên độ khung voice sau khi tính fft
+subplot(row,2,13);
+plot(freq_voice, k1);
+xlabel('frequency(Hz)');
+ylabel('LMS(dB)');
+title('phổ biên đồ khung voice');
+
+% phổ biên độ khung khoảng lặng sau khi tính fft
+subplot(row,2,14);
+plot(freq_silence, k2);
+xlabel('frequency(Hz)');
+ylabel('LMS(dB)');
+title('phổ biên đồ khung silence');
+
 
 %{
 figure(2);
