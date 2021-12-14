@@ -45,10 +45,10 @@ function [F0, thresh] = pitchDetectHPS(newDftz, index_frame, fs, pointFFT, perio
     hps4 = downsample(newDftz, 4);
     hps5 = downsample(newDftz, 5);
     %}
-    y = zeros(length(hps5), 1);
+    Hps = zeros(length(hps5), 1);
     for i=1:length(hps5)
           Product = hps1(i) * hps2(i) * hps3(i) * hps4(i) * hps5(i);
-          y(i) = Product;
+          Hps(i) = Product;
     end
     
     %{
@@ -59,17 +59,17 @@ function [F0, thresh] = pitchDetectHPS(newDftz, index_frame, fs, pointFFT, perio
     end
     %}
     
-    [data, locs] = findpeaks(y, 'SORTSTR', 'descend');
+    [data, locs] = findpeaks(Hps, 'SORTSTR', 'descend');
 
     Maximum = locs(1);
     
     thresh = 0;
     
-    % phát hiện pitch ảo
+    % điều kiện phát hiện pitch ảo
     if length(locs) > 2
-        thresh = y(locs(2)) / y(locs(1));
-        if y(locs(1)) * 0.5 < y(locs(2))
-            [data1, locs1] = findpeaks(y);
+        thresh = Hps(locs(2)) / Hps(locs(1));
+        if thresh > 0.5
+            [data1, locs1] = findpeaks(Hps);
             [data2, locs2] = findpeaks(data1);
             %Maximum = locs(length(locs));
             if length(locs2) > 0
@@ -81,9 +81,10 @@ function [F0, thresh] = pitchDetectHPS(newDftz, index_frame, fs, pointFFT, perio
       
     F0 =  ((Maximum / pointFFT) * fs);
     
-    if F0 > 400 || F0 < 70 || periodic(index_frame) == 0
+    if F0 > 400 || F0 < 70
         F0 = 0;
     end
+    
     %{
     if F0 > 400 || F0 < 70 || ste < th_ste
         F0 =  0;
