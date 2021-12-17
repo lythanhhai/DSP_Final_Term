@@ -54,7 +54,7 @@
     for i = 1:numberFrames
         ste_copy(i) = ste(i);
     end
-    ste_copy;
+    %ste_copy;
 
     ste_wave = 0;
     for j = 1 : length(ste)
@@ -122,6 +122,144 @@
     %plot(filterFo, '.');
     fo_mean_median;
     fo_std_median;
+    
+    % kiểm tra khung bị pitch ảo
+    %{
+    index_frame_test = 70;
+    k = P(index_frame_test, :);
+    t3=(1/(fs):1/fs:(length(k)/fs));
+    subplot(2, 2, 1);
+    plot(t3,k);
+    title('Voiced segment of speech');
+    xlabel("Time(sec)");
+    ylabel("Magnitude");
+    
+
+    w = hamming(length(k));
+    for i=1:length(k)
+      k2(i) = k(i)*w(i);
+    end
+
+    dftk = abs(fft(k2, pointFFT));
+    dftk = dftk(1:(length(dftk) / 2));
+    dftk = 10*log10(dftk);
+
+    for i=1:length(dftk)
+        % giới hạn dãy tần số <= 1kHz
+        if i * (fs / pointFFT) <= rangeFreq
+           newDftk(i) = dftk(i);
+        end
+    end
+    index1 = 1;
+        for i = 1:length(newDftk)
+            hps1(index1) = newDftk(i);
+            index1 = index1 + 1;
+        end
+
+        index1 = 1;
+        for i = 1:length(newDftk)
+            if mod(i, 2) == 0
+                hps2(index1) = newDftk(i);
+                index1 = index1 + 1;
+            end
+        end
+
+        index1 = 1;
+        for i = 1:length(newDftk)
+            if mod(i, 3) == 0
+                hps3(index1) = newDftk(i);
+                index1 = index1 + 1;
+            end
+        end
+
+        index1 = 1;
+        for i = 1:length(newDftk)
+            if mod(i, 4) == 0
+                hps4(index1) = newDftk(i);
+                index1 = index1 + 1;
+            end
+        end
+
+        index1 = 1;
+        for i = 1:length(newDftk)
+            if mod(i, 5) == 0
+                hps5(index1) = newDftk(i);
+                index1 = index1 + 1;
+            end
+        end
+
+    y = zeros(length(hps5), 1);
+    for i=1:length(hps5)
+        Product = hps1(i) * hps2(i) * hps3(i) * hps4(i) * hps5(i);
+          y(i) = Product;
+    end
+    %{
+    [data, locs] = findpeaks(y, 'SORTSTR', 'descend');
+    data;
+    locs;
+    [data1, locs1] = findpeaks(y);
+    data1;
+    locs1;
+    [data2, locs2] = findpeaks(data1);
+    data2;
+    locs2;
+    subplot(5,1,3);
+    plot(data);
+    subplot(5,1, 5);
+    plot(data1);
+    %}
+    freq = linspace(1/fs, 44100 / pointFFT * length(newDftk), length(newDftk));
+    subplot(2, 2, 3);
+    plot(freq, newDftk);
+    title('Log magnitude spectrum using hamming window');
+    xlabel("Frequent(HZ)");
+    ylabel("LMS(db)");
+
+    %{
+    time = (1/fs)*length(x);
+    t = linspace(0, time, length(x));
+    subplot(5,1,4);
+    plot(t, x);
+    xlabel('time(sec)');
+    ylabel('magnitude');
+    title(['Speech signal ', tenFile]);
+    %}
+    
+    index_frame_test = 366;
+    k = P(index_frame_test, :);
+    t3=(1/(fs):1/fs:(length(k)/fs));
+    subplot(2,2,2);
+    plot(t3,k);
+    title('Voiced segment of speech');
+    xlabel("Time(sec)");
+    ylabel("Magnitude");
+    
+    
+    w = hamming(length(k));
+    for i=1:length(k)
+      k2(i) = k(i)*w(i);
+    end
+
+    dftk = abs(fft(k2, pointFFT));
+    dftk = dftk(1:(length(dftk) / 2));
+    dftk = 10*log10(dftk);
+
+    for i=1:length(dftk)
+        % giới hạn dãy tần số <= 1kHz
+        if i * (fs / pointFFT) <= rangeFreq
+           newDftk(i) = dftk(i);
+        end
+    end
+    
+    freq = linspace(1/fs, 44100 / pointFFT * length(newDftk), length(newDftk));
+    subplot(2,2,4);
+    plot(freq, newDftk);
+    title('Log magnitude spectrum using hamming window');
+    xlabel("Frequent(HZ)");
+    ylabel("LMS(db)");
+    
+    %}
+    
 
     row = 7;
 
@@ -231,24 +369,5 @@
     ylabel('LMS(dB)');
     title('Phổ biên độ khung silence');
 
-
-    %{
-    figure(2);
-    max_value=max(abs(x));
-    z=P(60, :);
-    z=z/max_value;
-    t=1/fs:1/fs:(length(z)/fs);
-    subplot(3,1,1);
-    plot(t,z);
-    title('Voiced Speech waveform');
-
-    dftz=abs(fft(z, pointFFT));
-    dftz=dftz(1:(length(dftz)/2));
-    dftzlog=10*log10(dftz);
-    freq=linspace(1/fs,fs/2000,length(dftz));
-    subplot(3,1,2);
-    plot(freq,dftzlog);
-    title('Log Magnitude Spectrum');
-    %}
 
 end
