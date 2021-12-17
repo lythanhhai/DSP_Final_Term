@@ -65,20 +65,69 @@ function [F0, thresh] = pitchDetectHPS(newDftz, index_frame, fs, pointFFT, perio
     
     thresh = 0;
     
+    %{
+    if length(locs) > 2
+        thresh = Hps(locs(2)) / Hps(locs(1));
+        if thresh > 0.5
+            Maximum = locs(length(locs));
+        end
+    end
+    %}
+    
+    
+    % C1
     % điều kiện phát hiện pitch ảo
+    
     if length(locs) > 2
         thresh = Hps(locs(2)) / Hps(locs(1));
         if thresh > 0.5
             [data1, locs1] = findpeaks(Hps);
             [data2, locs2] = findpeaks(data1);
             %Maximum = locs(length(locs));
+            %{
             if length(locs2) > 0
                 Maximum = locs1(locs2(length(locs2)));
             end
+            %}
+            for i=1:length(data2)
+                if data2(i) == max(data) && length(data2) >= (i + 1)
+                     Maximum = locs1(locs2(i+1));
+                end
+            end  
         end
     end
     
-      
+    %C2
+    %{
+    if length(locs) > 2
+        thresh = Hps(locs(2)) / Hps(locs(1));
+    end
+    if thresh > 0.5
+       for i = 2:length(data)-1
+           if Hps(locs(i+1)) / Hps(locs(i)) > 0.5 
+               Maximum = locs(i + 1);
+           else 
+               break;
+           end
+       end
+    end
+    %}
+    % C3
+    %{
+    if length(locs) > 2
+        thresh = Hps(locs(2)) / Hps(locs(1));
+    end
+    if thresh > 0.5
+       for i = (length(data)):2
+           if Hps(locs(i)) / Hps(locs(i-1)) > 0.5 && Hps(locs(i-1)) > 0
+               Maximum = locs(i);
+           else 
+               break;
+           end
+       end
+    end
+    %}
+    
     F0 =  ((Maximum / pointFFT) * fs);
     
     if F0 > 400 || F0 < 70

@@ -1,5 +1,25 @@
 % quan trọng
 %{
+   %{
+    figure(2);
+    max_value=max(abs(x));
+    z=P(60, :);
+    z=z/max_value;
+    t=1/fs:1/fs:(length(z)/fs);
+    subplot(3,1,1);
+    plot(t,z);
+    title('Voiced Speech waveform');
+
+    dftz=abs(fft(z, pointFFT));
+    dftz=dftz(1:(length(dftz)/2));
+    dftzlog=10*log10(dftz);
+    freq=linspace(1/fs,fs/2000,length(dftz));
+    subplot(3,1,2);
+    plot(freq,dftzlog);
+    title('Log Magnitude Spectrum');
+    %}
+%}
+%{
 %figure(2);
 
 index_frame_test = 365;
